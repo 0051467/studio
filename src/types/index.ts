@@ -23,6 +23,7 @@ export interface Player {
   gender?: 'Male' | 'Female' | 'Other'; // Optional for simplicity, might be inferred by category
   dateOfBirth?: string; // YYYY-MM-DD
   club?: string;
+  seedNumber?: number; // Optional seed number for tournaments
   // For doubles, a player entry might represent a pair
   partnerName?: string; // If it's a doubles pair registered together
   // Player ID could be a national ID or internal ID
@@ -58,6 +59,8 @@ export interface Score {
 }
 
 export type TournamentStatus = 'Draft' | 'Published' | 'In Progress' | 'Completed' | 'Canceled';
+export type MatchStatus = 'Upcoming' | 'Live' | 'Completed' | 'Walkover' | 'Retired';
+
 
 export interface Tournament {
   id: string;
@@ -78,3 +81,4 @@ export interface Tournament {
   status: TournamentStatus;
   eventCategories: EventCategory[];
 }
+

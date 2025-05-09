@@ -189,13 +189,16 @@ export function EventManagementTab({ tournament }: EventManagementTabProps) {
                 <p className="text-sm text-muted-foreground">
                   Loại: {translateEventType(event.type)}, Giới tính: {translateEventGender(event.gender)}, Nhóm tuổi: {event.ageGroup || "Bất kỳ"}
                 </p>
+                 <p className="text-sm text-muted-foreground">
+                  {event.players.length} VĐV. {event.drawGenerated ? "Nhánh đấu đã được tạo." : "Nhánh đấu chưa được tạo."}
+                </p>
               </CardContent>
               <CardFooter className="flex justify-between items-center">
                   <span className="text-xs text-muted-foreground">
-                    {event.players.length} Vận động viên
+                    ID: {event.id}
                   </span>
                   <Button asChild size="sm" variant="secondary">
-                    <Link href={`/dashboard/tournaments/${tournament.id}/manage/events/${event.id}`}>
+                    <Link href={`/dashboard/tournaments/${tournament.id}/manage/players?eventId=${event.id}`}>
                         <Users className="mr-2 h-4 w-4" /> Quản lý Vận động viên
                     </Link>
                   </Button>

@@ -4,7 +4,7 @@
 import type { Tournament, EventCategory, Player, Match, Score, TournamentStatus } from '@/types';
 import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { translateTournamentStatus } from '@/lib/i18nUtils';
+// import { translateTournamentStatus } from '@/lib/i18nUtils'; // Not used here, but good for UI
 
 
 interface TournamentContextType {
@@ -15,6 +15,7 @@ interface TournamentContextType {
   deleteTournament: (id: string) => void;
   
   addEventCategory: (tournamentId: string, eventData: Omit<EventCategory, 'id' | 'players' | 'matches' | 'drawGenerated' | 'seeds'>) => EventCategory | undefined;
+  getEventCategoryById: (tournamentId: string, eventCategoryId: string) => EventCategory | undefined;
   updateEventCategory: (tournamentId: string, eventId: string, updates: Partial<EventCategory>) => void;
   deleteEventCategory: (tournamentId: string, eventId: string) => void;
 
@@ -49,14 +50,14 @@ const initialTournaments: Tournament[] = [
         type: 'Singles', 
         gender: 'Men', 
         players: [
-          { id: 'player1', name: 'John Doe', club: 'Alpha Club' },
-          { id: 'player2', name: 'Mike Smith', club: 'Beta Club' },
+          { id: 'player1', name: 'John Doe', club: 'Alpha Club', seedNumber: 1 },
+          { id: 'player2', name: 'Mike Smith', club: 'Beta Club', seedNumber: 2 },
           { id: 'player3', name: 'Peter Jones', club: 'Gamma Club' },
           { id: 'player4', name: 'David Lee', club: 'Delta Club' },
         ], 
         matches: [], 
         drawGenerated: false,
-        seeds: [],
+        seeds: ['player1', 'player2'], // IDs of seeded players
       },
       { id: 'wd-demo', name: "Đôi Nữ", type: 'Doubles', gender: 'Women', players: [], matches: [], drawGenerated: false, seeds: [] },
     ],
@@ -83,7 +84,6 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
       try {
         if (savedTournaments) {
           const parsedTournaments = JSON.parse(savedTournaments);
-          // Basic validation to ensure it's an array
           return Array.isArray(parsedTournaments) ? parsedTournaments : initialTournaments;
         }
       } catch (error) {
@@ -105,7 +105,7 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
     const newTournament: Tournament = {
       ...tournamentData,
       id: uuidv4(),
-      status: 'Draft', // Default to Draft
+      status: 'Draft', 
       eventCategories: [],
       venues: [{id: uuidv4(), name: tournamentData.venuesInput, address: '', numberOfCourts: 0}] 
     };
@@ -135,6 +135,12 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
     }));
     return newEventCategory;
   }, []);
+  
+  const getEventCategoryById = useCallback((tournamentId: string, eventCategoryId: string): EventCategory | undefined => {
+    const tournament = getTournamentById(tournamentId);
+    return tournament?.eventCategories.find(ec => ec.id === eventCategoryId);
+  }, [getTournamentById]);
+
 
   const updateEventCategory = useCallback((tournamentId: string, eventId: string, updates: Partial<EventCategory>) => {
     setTournaments(prevTournaments =>
@@ -174,7 +180,11 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
           ...t,
           eventCategories: t.eventCategories.map(ec => {
             if (ec.id === eventCategoryId) {
-              return { ...ec, players: [...ec.players, newPlayer] };
+              // If player is seeded (has seedNumber), add their ID to ec.seeds
+              const newSeeds = playerData.seedNumber && !ec.seeds.includes(newPlayer.id)
+                                ? [...ec.seeds, newPlayer.id]
+                                : ec.seeds;
+              return { ...ec, players: [...ec.players, newPlayer], seeds: newSeeds };
             }
             return ec;
           })
@@ -193,7 +203,11 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
             ...tournament,
             eventCategories: tournament.eventCategories.map(event => {
               if (event.id === eventCategoryId) {
-                return { ...event, players: event.players.filter(p => p.id !== playerId) };
+                return { 
+                  ...event, 
+                  players: event.players.filter(p => p.id !== playerId),
+                  seeds: event.seeds.filter(seedId => seedId !== playerId) // Remove from seeds if present
+                };
               }
               return event;
             }),
@@ -212,7 +226,24 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
             ...tournament,
             eventCategories: tournament.eventCategories.map(event => {
               if (event.id === eventCategoryId) {
-                return { ...event, players: event.players.map(p => p.id === playerId ? {...p, ...updates} : p) };
+                let newSeeds = [...event.seeds];
+                const playerIndex = event.players.findIndex(p => p.id === playerId);
+                if (playerIndex === -1) return event;
+
+                const updatedPlayer = { ...event.players[playerIndex], ...updates };
+                
+                if (updates.hasOwnProperty('seedNumber')) { // Check if seedNumber is part of updates
+                  if (updates.seedNumber && updates.seedNumber > 0) {
+                    if (!newSeeds.includes(playerId)) newSeeds.push(playerId);
+                  } else {
+                    newSeeds = newSeeds.filter(id => id !== playerId);
+                  }
+                }
+                
+                const newPlayers = [...event.players];
+                newPlayers[playerIndex] = updatedPlayer;
+
+                return { ...event, players: newPlayers, seeds: newSeeds };
               }
               return event;
             }),
@@ -230,34 +261,53 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
           ...t,
           eventCategories: t.eventCategories.map(ec => {
             if (ec.id === eventCategoryId && ec.players.length > 1) {
-              const players = [...ec.players]; 
+              const allPlayers = [...ec.players]; 
               
-              const seededPlayers = ec.seeds.map(seedId => players.find(p => p.id === seedId)).filter(Boolean) as Player[];
-              const unseededPlayers = players.filter(p => !ec.seeds.includes(p.id));
+              // Separate seeded and unseeded players
+              const seededPlayerObjects = ec.seeds
+                .map(seedId => allPlayers.find(p => p.id === seedId))
+                .filter((p): p is Player => !!p) // Type guard
+                .sort((a, b) => (a.seedNumber || Infinity) - (b.seedNumber || Infinity));
               
-              for (let i = unseededPlayers.length - 1; i > 0; i--) {
+              const unseededPlayerObjects = allPlayers.filter(p => !ec.seeds.includes(p.id));
+              
+              // Shuffle unseeded players
+              for (let i = unseededPlayerObjects.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
-                [unseededPlayers[i], unseededPlayers[j]] = [unseededPlayers[j], unseededPlayers[i]];
+                [unseededPlayerObjects[i], unseededPlayerObjects[j]] = [unseededPlayerObjects[j], unseededPlayerObjects[i]];
               }
 
-              const orderedPlayers = [...seededPlayers, ...unseededPlayers];
+              // Combine lists: sorted seeded players first, then shuffled unseeded players
+              const orderedPlayers = [...seededPlayerObjects, ...unseededPlayerObjects];
 
               let numPlayers = orderedPlayers.length;
-              let rounds = Math.ceil(Math.log2(numPlayers));
+              let rounds = Math.ceil(Math.log2(numPlayers)); // Smallest power of 2 >= numPlayers
               let bracketSize = Math.pow(2, rounds);
               let byes = bracketSize - numPlayers;
 
               const matches: Match[] = [];
-              let currentRoundPlayers = [...orderedPlayers];
+              let currentRoundPlayers: (Player | { id: string; name: string })[] = [...orderedPlayers];
               
+              // Distribute byes (typically among top seeds, but here simplified)
+              // Add placeholders for byes at the end of the player list before pairing
               for(let i = 0; i < byes; i++) {
+                // Ideally, byes are assigned strategically. Here, just adding placeholders.
+                // For a more standard seeding, byes would be matched with lower seeds or unseeded players.
+                // This simplified version adds byes to make pairs.
                 currentRoundPlayers.push({ id: `bye-${i}`, name: 'MIỄN ĐẤU' });
               }
               
+              // Create initial round matches
               for (let i = 0; i < bracketSize / 2; i++) {
                 const player1 = currentRoundPlayers[i*2];
                 const player2 = currentRoundPlayers[i*2+1];
                 
+                const matchIsBye = player1.name === 'MIỄN ĐẤU' || player2.name === 'MIỄN ĐẤU';
+                let winnerIfBye: string | undefined = undefined;
+                if (matchIsBye) {
+                  winnerIfBye = player1.name === 'MIỄN ĐẤU' ? player2.id : player1.id;
+                }
+
                 matches.push({
                   id: uuidv4(),
                   round: 1,
@@ -266,24 +316,15 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
                   player1Name: player1.name,
                   player2Id: player2.id,
                   player2Name: player2.name,
-                  status: 'Upcoming', // Sắp diễn ra
-                  isBye: player1.name === 'MIỄN ĐẤU' || player2.name === 'MIỄN ĐẤU'
+                  status: matchIsBye ? 'Completed' : 'Upcoming',
+                  isBye: matchIsBye,
+                  winnerId: winnerIfBye
                 });
               }
               
-              const round1Matches = matches.map(match => {
-                if(match.isBye) {
-                  if (match.player1Name === 'MIỄN ĐẤU' && match.player2Id) {
-                    return { ...match, winnerId: match.player2Id, status: 'Completed' as TournamentStatus}; // Đã hoàn thành
-                  }
-                  if (match.player2Name === 'MIỄN ĐẤU' && match.player1Id) {
-                     return { ...match, winnerId: match.player1Id, status: 'Completed' as TournamentStatus}; // Đã hoàn thành
-                  }
-                }
-                return match;
-              });
-
-              return { ...ec, matches: round1Matches, drawGenerated: true };
+              // Note: This only generates the first round.
+              // Advancing players to subsequent rounds needs more logic.
+              return { ...ec, matches: matches, drawGenerated: true };
             }
             return ec;
           })
@@ -318,7 +359,7 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
   return (
     <TournamentContext.Provider value={{ 
       tournaments, addTournament, getTournamentById, updateTournament, deleteTournament,
-      addEventCategory, updateEventCategory, deleteEventCategory,
+      addEventCategory, getEventCategoryById, updateEventCategory, deleteEventCategory,
       addPlayerToEvent, removePlayerFromEvent, updatePlayerInEvent,
       generateKnockoutDraw, updateMatchDetails, setMatchScore
     }}>
@@ -334,3 +375,4 @@ export const useTournaments = (): TournamentContextType => {
   }
   return context;
 };
+

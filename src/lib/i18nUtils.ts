@@ -1,5 +1,5 @@
 // src/lib/i18nUtils.ts
-import type { EventCategory, TournamentStatus } from '@/types';
+import type { EventCategory, TournamentStatus, MatchStatus } from '@/types';
 
 export const translateTournamentStatus = (status: TournamentStatus | string): string => {
   // Ensure status is a valid key or handle it gracefully
@@ -30,4 +30,16 @@ export const translateEventGender = (gender: EventCategory['gender']): string =>
     Any: 'Bất kỳ',
   };
   return map[gender] || gender;
+};
+
+export const translateMatchStatus = (status: MatchStatus | string): string => {
+  const validStatus = status as MatchStatus;
+  const map: Record<MatchStatus, string> = {
+    Upcoming: 'Sắp diễn ra',
+    Live: 'Trực tiếp',
+    Completed: 'Đã hoàn thành',
+    Walkover: 'Bỏ cuộc (W.O.)',
+    Retired: 'Xin thua (Ret.)',
+  };
+  return map[validStatus] || status.toString();
 };
