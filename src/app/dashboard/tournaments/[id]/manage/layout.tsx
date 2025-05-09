@@ -13,12 +13,12 @@ import type { Tournament } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const navItems = [
-  { id: 'overview', label: 'Overview', icon: Trophy, href: 'overview' },
-  { id: 'events', label: 'Events', icon: ListChecks, href: 'events' },
-  { id: 'players', label: 'Players', icon: Users, href: 'players' },
-  { id: 'draws', label: 'Draws', icon: GitFork, href: 'draws' },
-  { id: 'schedule', label: 'Schedule', icon: CalendarDays, href: 'schedule' },
-  { id: 'scores', label: 'Scores', icon: ClipboardList, href: 'scores' },
+  { id: 'overview', label: 'Tổng quan', icon: Trophy, href: 'overview' },
+  { id: 'events', label: 'Nội dung thi đấu', icon: ListChecks, href: 'events' },
+  { id: 'players', label: 'Vận động viên', icon: Users, href: 'players' },
+  { id: 'draws', label: 'Nhánh đấu', icon: GitFork, href: 'draws' },
+  { id: 'schedule', label: 'Lịch thi đấu', icon: CalendarDays, href: 'schedule' },
+  { id: 'scores', label: 'Tỷ số', icon: ClipboardList, href: 'scores' },
 ];
 
 export default function TournamentManageLayout({
@@ -57,13 +57,13 @@ export default function TournamentManageLayout({
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Tournament Not Found</CardTitle>
+          <CardTitle>Không tìm thấy Giải đấu</CardTitle>
         </CardHeader>
         <CardContent>
-          <p>The tournament you are looking for does not exist or could not be loaded.</p>
+          <p>Giải đấu bạn đang tìm kiếm không tồn tại hoặc không thể tải được.</p>
           <Button asChild variant="link" className="mt-4">
             <Link href="/dashboard">
-              <ArrowLeft className="mr-2 h-4 w-4" /> Go back to dashboard
+              <ArrowLeft className="mr-2 h-4 w-4" /> Quay lại bảng điều khiển
             </Link>
           </Button>
         </CardContent>
@@ -78,14 +78,14 @@ export default function TournamentManageLayout({
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <Button variant="outline" size="sm" asChild className="mb-2">
-            <Link href="/dashboard"><ArrowLeft className="mr-2 h-4 w-4" /> Back to Tournaments</Link>
+            <Link href="/dashboard"><ArrowLeft className="mr-2 h-4 w-4" /> Quay lại Danh sách Giải đấu</Link>
           </Button>
           <h1 className="text-3xl font-bold tracking-tight">{tournament.name}</h1>
-          <p className="text-muted-foreground">Manage all aspects of your tournament.</p>
+          <p className="text-muted-foreground">Quản lý mọi khía cạnh của giải đấu của bạn.</p>
         </div>
         <Button variant="outline" asChild>
             <Link href={`/tournaments/${tournament.id}`} target="_blank">
-                <Eye className="mr-2 h-4 w-4" /> View Public Page
+                <Eye className="mr-2 h-4 w-4" /> Xem Trang Công khai
             </Link>
         </Button>
       </div>

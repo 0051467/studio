@@ -11,7 +11,7 @@ export function AppLogo({ className, iconSize = 6, textSize = "lg" }: AppLogoPro
   return (
     <Link href="/" className={`flex items-center gap-2 font-bold text-${textSize} ${className}`}>
       <Trophy className={`h-${iconSize} w-${iconSize} text-primary`} />
-      MatchPoint Manager
+      Trình quản lý MatchPoint
     </Link>
   );
 }

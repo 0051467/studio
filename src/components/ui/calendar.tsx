@@ -2,17 +2,21 @@
 
 import * as React from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { DayPicker } from "react-day-picker"
+import { DayPicker, Locale } from "react-day-picker"
+import { enUS } from "date-fns/locale"; // Default locale
 
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 
-export type CalendarProps = React.ComponentProps<typeof DayPicker>
+export type CalendarProps = React.ComponentProps<typeof DayPicker> & {
+  locale?: Locale; // Allow passing locale
+}
 
 function Calendar({
   className,
   classNames,
   showOutsideDays = true,
+  locale = enUS, // Default to English if no locale is provided
   ...props
 }: CalendarProps) {
   return (
@@ -54,13 +58,14 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        IconLeft: ({ className, ...props }) => (
-          <ChevronLeft className={cn("h-4 w-4", className)} {...props} />
+        IconLeft: ({ className: iconClassName, ...restProps }) => ( // Renamed className to avoid conflict
+          <ChevronLeft className={cn("h-4 w-4", iconClassName)} {...restProps} />
         ),
-        IconRight: ({ className, ...props }) => (
-          <ChevronRight className={cn("h-4 w-4", className)} {...props} />
+        IconRight: ({ className: iconClassName, ...restProps }) => ( // Renamed className to avoid conflict
+          <ChevronRight className={cn("h-4 w-4", iconClassName)} {...restProps} />
         ),
       }}
+      locale={locale} // Pass locale to DayPicker
       {...props}
     />
   )

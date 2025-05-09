@@ -26,24 +26,22 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarSeparator
-} from "@/components/ui/sidebar"; // Assuming you have this advanced sidebar
+} from "@/components/ui/sidebar"; 
 import { AppLogo } from "./AppLogo";
 
 
 const mainNavItems = [
-  { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-  { href: "/dashboard/tournaments/new", label: "New Tournament", icon: PlusCircle },
+  { href: "/dashboard", label: "Tổng quan", icon: LayoutDashboard },
+  { href: "/dashboard/tournaments/new", label: "Giải đấu Mới", icon: PlusCircle },
 ];
 
-// These items would typically be dynamic based on the selected tournament
-const tournamentSpecificNavItemsBase = "/dashboard/tournaments/[id]/manage"; // Placeholder base
 const tournamentNavItems = [
-    { href: "overview", label: "Tournament Details", icon: Trophy },
-    { href: "events", label: "Event Categories", icon: ListChecks },
-    { href: "players", label: "Player Management", icon: Users },
-    { href: "draws", label: "Draws", icon: GitFork },
-    { href: "schedule", label: "Schedule", icon: CalendarDays },
-    { href: "scores", label: "Scores & Results", icon: ClipboardList },
+    { href: "overview", label: "Chi tiết Giải đấu", icon: Trophy },
+    { href: "events", label: "Hạng mục Sự kiện", icon: ListChecks },
+    { href: "players", label: "Quản lý Vận động viên", icon: Users },
+    { href: "draws", label: "Nhánh đấu", icon: GitFork },
+    { href: "schedule", label: "Lịch thi đấu", icon: CalendarDays },
+    { href: "scores", label: "Tỷ số & Kết quả", icon: ClipboardList },
 ];
 
 
@@ -60,7 +58,7 @@ export function SidebarNav() {
       <SidebarContent>
         <SidebarMenu>
           <SidebarGroup>
-            <SidebarGroupLabel>Main</SidebarGroupLabel>
+            <SidebarGroupLabel>Chính</SidebarGroupLabel>
             {mainNavItems.map((item) => (
               <SidebarMenuItem key={item.href}>
                 <Link href={item.href} passHref legacyBehavior>
@@ -83,7 +81,7 @@ export function SidebarNav() {
             <>
             <SidebarSeparator />
             <SidebarGroup>
-              <SidebarGroupLabel>Manage Tournament</SidebarGroupLabel>
+              <SidebarGroupLabel>Quản lý Giải đấu</SidebarGroupLabel>
               {tournamentNavItems.map((item) => {
                 const fullPath = `/dashboard/tournaments/${currentTournamentId}/manage/${item.href}`;
                 return (
@@ -110,7 +108,7 @@ export function SidebarNav() {
       </SidebarContent>
       <SidebarFooter>
         <Button variant="ghost" className="w-full justify-start">
-          Help
+          Trợ giúp
         </Button>
       </SidebarFooter>
     </Sidebar>

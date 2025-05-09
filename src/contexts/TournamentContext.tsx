@@ -4,6 +4,8 @@
 import type { Tournament, EventCategory, Player, Match, Score, TournamentStatus } from '@/types';
 import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import { translateTournamentStatus } from '@/lib/i18nUtils';
+
 
 interface TournamentContextType {
   tournaments: Tournament[];
@@ -30,20 +32,20 @@ const TournamentContext = createContext<TournamentContextType | undefined>(undef
 const initialTournaments: Tournament[] = [
   {
     id: 'yonex-demo-2024',
-    name: 'Yonex Demo Open 2024',
+    name: 'Giải Yonex Demo Mở rộng 2024',
     startDate: '2024-09-15',
     endDate: '2024-09-20',
-    venues: [{ id: uuidv4(), name: 'City Arena', address: '123 Main St, Anytown', numberOfCourts: 6 }],
-    organizerName: 'Badminton Club XYZ',
+    venues: [{ id: uuidv4(), name: 'Nhà thi đấu Thành phố', address: '123 Main St, Anytown', numberOfCourts: 6 }],
+    organizerName: 'CLB Cầu lông XYZ',
     organizerContact: 'info@badminton.xyz',
     prizeMoney: '$5,000',
-    level: 'Regional',
+    level: 'Khu vực',
     entryDeadline: '2024-09-01',
     status: 'Published',
     eventCategories: [
       { 
         id: 'ms-demo', 
-        name: "Men's Singles", 
+        name: "Đơn Nam", 
         type: 'Singles', 
         gender: 'Men', 
         players: [
@@ -56,18 +58,18 @@ const initialTournaments: Tournament[] = [
         drawGenerated: false,
         seeds: [],
       },
-      { id: 'wd-demo', name: "Women's Doubles", type: 'Doubles', gender: 'Women', players: [], matches: [], drawGenerated: false, seeds: [] },
+      { id: 'wd-demo', name: "Đôi Nữ", type: 'Doubles', gender: 'Women', players: [], matches: [], drawGenerated: false, seeds: [] },
     ],
     posterUrl: 'https://picsum.photos/seed/poster1/400/600',
     websiteUrl: 'https://example.com',
   },
   {
     id: 'local-cup-2025',
-    name: 'Local Club Cup 2025',
+    name: 'Cúp CLB Địa phương 2025',
     startDate: '2025-01-10',
     endDate: '2025-01-12',
-    venues: [{ id: uuidv4(), name: 'Community Hall', address: '456 Oak Ave, Sometown', numberOfCourts: 3 }],
-    organizerName: 'Sometown Badminton Association',
+    venues: [{ id: uuidv4(), name: 'Hội trường Cộng đồng', address: '456 Oak Ave, Sometown', numberOfCourts: 3 }],
+    organizerName: 'Hiệp hội Cầu lông Sometown',
     status: 'Draft',
     eventCategories: [],
   }
@@ -78,7 +80,17 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
   const [tournaments, setTournaments] = useState<Tournament[]>(() => {
     if (typeof window !== 'undefined') {
       const savedTournaments = localStorage.getItem('tournaments');
-      return savedTournaments ? JSON.parse(savedTournaments) : initialTournaments;
+      try {
+        if (savedTournaments) {
+          const parsedTournaments = JSON.parse(savedTournaments);
+          // Basic validation to ensure it's an array
+          return Array.isArray(parsedTournaments) ? parsedTournaments : initialTournaments;
+        }
+      } catch (error) {
+        console.error("Lỗi khi phân tích giải đấu từ localStorage:", error);
+        return initialTournaments;
+      }
+      return initialTournaments;
     }
     return initialTournaments;
   });
@@ -93,9 +105,9 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
     const newTournament: Tournament = {
       ...tournamentData,
       id: uuidv4(),
-      status: 'Draft',
+      status: 'Draft', // Default to Draft
       eventCategories: [],
-      venues: [{id: uuidv4(), name: tournamentData.venuesInput, address: '', numberOfCourts: 0}] // Simplified venue
+      venues: [{id: uuidv4(), name: tournamentData.venuesInput, address: '', numberOfCourts: 0}] 
     };
     setTournaments(prev => [...prev, newTournament]);
     return newTournament;
@@ -218,19 +230,16 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
           ...t,
           eventCategories: t.eventCategories.map(ec => {
             if (ec.id === eventCategoryId && ec.players.length > 1) {
-              const players = [...ec.players]; // Shuffle or use seeding later
+              const players = [...ec.players]; 
               
-              // Simplified seeding: first N players are seeds if specified
               const seededPlayers = ec.seeds.map(seedId => players.find(p => p.id === seedId)).filter(Boolean) as Player[];
               const unseededPlayers = players.filter(p => !ec.seeds.includes(p.id));
               
-              // Simple shuffle for unseeded players
               for (let i = unseededPlayers.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [unseededPlayers[i], unseededPlayers[j]] = [unseededPlayers[j], unseededPlayers[i]];
               }
 
-              // Correctly order players for draw generation: seeds first, then shuffled unseeded
               const orderedPlayers = [...seededPlayers, ...unseededPlayers];
 
               let numPlayers = orderedPlayers.length;
@@ -241,14 +250,10 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
               const matches: Match[] = [];
               let currentRoundPlayers = [...orderedPlayers];
               
-              // Distribute byes, typically among seeded players or top players
-              // For MVP: simply add placeholders for byes at the end
               for(let i = 0; i < byes; i++) {
-                currentRoundPlayers.push({ id: `bye-${i}`, name: 'BYE' });
+                currentRoundPlayers.push({ id: `bye-${i}`, name: 'MIỄN ĐẤU' });
               }
               
-              // Shuffle again after adding byes to mix them, except for top seeds if strongly seeded
-              // Simplified: just pair them up
               for (let i = 0; i < bracketSize / 2; i++) {
                 const player1 = currentRoundPlayers[i*2];
                 const player2 = currentRoundPlayers[i*2+1];
@@ -261,26 +266,22 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
                   player1Name: player1.name,
                   player2Id: player2.id,
                   player2Name: player2.name,
-                  status: 'Upcoming',
-                  isBye: player1.name === 'BYE' || player2.name === 'BYE'
+                  status: 'Upcoming', // Sắp diễn ra
+                  isBye: player1.name === 'MIỄN ĐẤU' || player2.name === 'MIỄN ĐẤU'
                 });
               }
               
-              // If a match has a BYE, automatically advance the other player
-              // This logic would be more complex for subsequent rounds
-              // For MVP, we only generate round 1.
               const round1Matches = matches.map(match => {
                 if(match.isBye) {
-                  if (match.player1Name === 'BYE' && match.player2Id) {
-                    return { ...match, winnerId: match.player2Id, status: 'Completed' as TournamentStatus};
+                  if (match.player1Name === 'MIỄN ĐẤU' && match.player2Id) {
+                    return { ...match, winnerId: match.player2Id, status: 'Completed' as TournamentStatus}; // Đã hoàn thành
                   }
-                  if (match.player2Name === 'BYE' && match.player1Id) {
-                     return { ...match, winnerId: match.player1Id, status: 'Completed' as TournamentStatus};
+                  if (match.player2Name === 'MIỄN ĐẤU' && match.player1Id) {
+                     return { ...match, winnerId: match.player1Id, status: 'Completed' as TournamentStatus}; // Đã hoàn thành
                   }
                 }
                 return match;
               });
-
 
               return { ...ec, matches: round1Matches, drawGenerated: true };
             }
@@ -311,9 +312,6 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
 
   const setMatchScore = useCallback((tournamentId: string, eventCategoryId: string, matchId: string, score: Score, winnerId: string) => {
     updateMatchDetails(tournamentId, eventCategoryId, matchId, { score, winnerId, status: 'Completed' });
-    // Basic progression logic: find next match for winner (highly simplified for MVP)
-    // This needs a proper bracket traversal logic for a full implementation.
-    // For MVP, this just marks the match as complete.
   }, [updateMatchDetails]);
 
 
@@ -332,7 +330,7 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
 export const useTournaments = (): TournamentContextType => {
   const context = useContext(TournamentContext);
   if (context === undefined) {
-    throw new Error('useTournaments must be used within a TournamentProvider');
+    throw new Error('useTournaments phải được sử dụng bên trong một TournamentProvider');
   }
   return context;
 };

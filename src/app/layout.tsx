@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'MatchPoint Manager',
-  description: 'Badminton Tournament Management Platform',
+  title: 'Trình quản lý MatchPoint',
+  description: 'Nền tảng Quản lý Giải đấu Cầu lông',
 };
 
 export default function RootLayout({
@@ -25,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="vi" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased font-sans`}>
         <TournamentProvider>
           <main>{children}</main>

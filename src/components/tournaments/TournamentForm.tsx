@@ -23,46 +23,47 @@ import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
+import { vi } from 'date-fns/locale';
 import { useToast } from "@/hooks/use-toast";
 
 const tournamentFormSchema = z.object({
-  name: z.string().min(3, "Tournament name must be at least 3 characters."),
-  startDate: z.date({ required_error: "Start date is required."}),
-  endDate: z.date({ required_error: "End date is required."}),
-  venuesInput: z.string().min(3, "Venue name is required."), // Simplified: single venue name
-  organizerName: z.string().min(2, "Organizer name is required."),
+  name: z.string().min(3, "Tên giải đấu phải có ít nhất 3 ký tự."),
+  startDate: z.date({ required_error: "Ngày bắt đầu là bắt buộc."}),
+  endDate: z.date({ required_error: "Ngày kết thúc là bắt buộc."}),
+  venuesInput: z.string().min(3, "Tên địa điểm là bắt buộc."), 
+  organizerName: z.string().min(2, "Tên ban tổ chức là bắt buộc."),
   organizerContact: z.string().optional(),
   prizeMoney: z.string().optional(),
   level: z.string().optional(),
   entryDeadline: z.date().optional(),
-  posterUrl: z.string().url("Must be a valid URL.").optional().or(z.literal('')),
-  websiteUrl: z.string().url("Must be a valid URL.").optional().or(z.literal('')),
-  socialMediaUrl: z.string().url("Must be a valid URL.").optional().or(z.literal('')),
+  posterUrl: z.string().url("Phải là một URL hợp lệ.").optional().or(z.literal('')),
+  websiteUrl: z.string().url("Phải là một URL hợp lệ.").optional().or(z.literal('')),
+  socialMediaUrl: z.string().url("Phải là một URL hợp lệ.").optional().or(z.literal('')),
 }).refine(data => data.endDate >= data.startDate, {
-  message: "End date cannot be before start date.",
+  message: "Ngày kết thúc không thể trước ngày bắt đầu.",
   path: ["endDate"],
 });
 
 type TournamentFormValues = z.infer<typeof tournamentFormSchema>;
 
 interface TournamentFormProps {
-  tournament?: Tournament; // For editing
+  tournament?: Tournament; 
   onSubmit: (data: TournamentFormValues) => void;
   submitButtonText?: string;
 }
 
-export function TournamentForm({ tournament, onSubmit, submitButtonText = "Create Tournament" }: TournamentFormProps) {
+export function TournamentForm({ tournament, onSubmit, submitButtonText = "Tạo Giải đấu" }: TournamentFormProps) {
   const { toast } = useToast();
   const defaultValues: Partial<TournamentFormValues> = tournament 
     ? {
         ...tournament,
         startDate: new Date(tournament.startDate),
         endDate: new Date(tournament.endDate),
-        venuesInput: tournament.venues[0]?.name || "", // Simplified
+        venuesInput: tournament.venues[0]?.name || "", 
         entryDeadline: tournament.entryDeadline ? new Date(tournament.entryDeadline) : undefined,
       } 
     : {
-      posterUrl: '', // Ensure empty strings for optional URL fields if not provided
+      posterUrl: '', 
       websiteUrl: '',
       socialMediaUrl: '',
     };
@@ -76,15 +77,15 @@ export function TournamentForm({ tournament, onSubmit, submitButtonText = "Creat
   function handleFormSubmit(data: TournamentFormValues) {
     onSubmit(data);
     toast({
-      title: tournament ? "Tournament Updated!" : "Tournament Created!",
-      description: `"${data.name}" has been successfully ${tournament ? 'updated' : 'created'}.`,
+      title: tournament ? "Giải đấu đã được cập nhật!" : "Giải đấu đã được tạo!",
+      description: `"${data.name}" đã được ${tournament ? 'cập nhật' : 'tạo'} thành công.`,
     });
   }
 
   return (
     <Card className="shadow-lg">
       <CardHeader>
-        <CardTitle>{tournament ? "Edit Tournament" : "Create New Tournament"}</CardTitle>
+        <CardTitle>{tournament ? "Chỉnh sửa Giải đấu" : "Tạo Giải đấu Mới"}</CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -94,9 +95,9 @@ export function TournamentForm({ tournament, onSubmit, submitButtonText = "Creat
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tournament Name</FormLabel>
+                  <FormLabel>Tên Giải đấu</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Yonex Taipei Open 2025" {...field} />
+                    <Input placeholder="VD: Giải Yonex Đài Bắc Mở rộng 2025" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -108,7 +109,7 @@ export function TournamentForm({ tournament, onSubmit, submitButtonText = "Creat
                 name="startDate"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>Start Date</FormLabel>
+                    <FormLabel>Ngày Bắt đầu</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
@@ -120,9 +121,9 @@ export function TournamentForm({ tournament, onSubmit, submitButtonText = "Creat
                             )}
                           >
                             {field.value ? (
-                              format(field.value, "PPP")
+                              format(field.value, "PPP", { locale: vi })
                             ) : (
-                              <span>Pick a date</span>
+                              <span>Chọn một ngày</span>
                             )}
                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
@@ -134,6 +135,7 @@ export function TournamentForm({ tournament, onSubmit, submitButtonText = "Creat
                           selected={field.value}
                           onSelect={field.onChange}
                           initialFocus
+                          locale={vi}
                         />
                       </PopoverContent>
                     </Popover>
@@ -146,7 +148,7 @@ export function TournamentForm({ tournament, onSubmit, submitButtonText = "Creat
                 name="endDate"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>End Date</FormLabel>
+                    <FormLabel>Ngày Kết thúc</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
@@ -158,9 +160,9 @@ export function TournamentForm({ tournament, onSubmit, submitButtonText = "Creat
                             )}
                           >
                             {field.value ? (
-                              format(field.value, "PPP")
+                              format(field.value, "PPP", { locale: vi })
                             ) : (
-                              <span>Pick a date</span>
+                              <span>Chọn một ngày</span>
                             )}
                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
@@ -172,6 +174,7 @@ export function TournamentForm({ tournament, onSubmit, submitButtonText = "Creat
                           selected={field.value}
                           onSelect={field.onChange}
                           initialFocus
+                          locale={vi}
                         />
                       </PopoverContent>
                     </Popover>
@@ -185,11 +188,11 @@ export function TournamentForm({ tournament, onSubmit, submitButtonText = "Creat
               name="venuesInput"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Venue Name</FormLabel>
+                  <FormLabel>Tên Địa điểm</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., National Stadium" {...field} />
+                    <Input placeholder="VD: Sân vận động Quốc gia" {...field} />
                   </FormControl>
-                  <FormDescription>Primary venue. More can be added in advanced settings.</FormDescription>
+                  <FormDescription>Địa điểm chính. Có thể thêm nhiều hơn trong cài đặt nâng cao.</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -199,9 +202,9 @@ export function TournamentForm({ tournament, onSubmit, submitButtonText = "Creat
               name="organizerName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Organizer Name</FormLabel>
+                  <FormLabel>Tên Ban tổ chức</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., City Badminton Association" {...field} />
+                    <Input placeholder="VD: Hiệp hội Cầu lông Thành phố" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -212,9 +215,9 @@ export function TournamentForm({ tournament, onSubmit, submitButtonText = "Creat
               name="organizerContact"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Organizer Contact (Email/Phone)</FormLabel>
+                  <FormLabel>Liên hệ Ban tổ chức (Email/Điện thoại)</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., contact@example.com" {...field} />
+                    <Input placeholder="VD: contact@example.com" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -226,9 +229,9 @@ export function TournamentForm({ tournament, onSubmit, submitButtonText = "Creat
                 name="prizeMoney"
                 render={({ field }) => (
                     <FormItem>
-                    <FormLabel>Prize Money (Overall)</FormLabel>
+                    <FormLabel>Tổng Giải thưởng</FormLabel>
                     <FormControl>
-                        <Input placeholder="e.g., $10,000 USD" {...field} />
+                        <Input placeholder="VD: 10,000 USD" {...field} />
                     </FormControl>
                     <FormMessage />
                     </FormItem>
@@ -239,9 +242,9 @@ export function TournamentForm({ tournament, onSubmit, submitButtonText = "Creat
                 name="level"
                 render={({ field }) => (
                     <FormItem>
-                    <FormLabel>Tournament Level/Type</FormLabel>
+                    <FormLabel>Cấp độ/Loại Giải đấu</FormLabel>
                     <FormControl>
-                        <Input placeholder="e.g., National, BWF Grade 3" {...field} />
+                        <Input placeholder="VD: Quốc gia, BWF Cấp độ 3" {...field} />
                     </FormControl>
                     <FormMessage />
                     </FormItem>
@@ -253,7 +256,7 @@ export function TournamentForm({ tournament, onSubmit, submitButtonText = "Creat
               name="entryDeadline"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel>Entry Deadline</FormLabel>
+                  <FormLabel>Hạn chót Đăng ký</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
@@ -265,9 +268,9 @@ export function TournamentForm({ tournament, onSubmit, submitButtonText = "Creat
                           )}
                         >
                           {field.value ? (
-                            format(field.value, "PPP")
+                            format(field.value, "PPP", { locale: vi })
                           ) : (
-                            <span>Pick a date (Optional)</span>
+                            <span>Chọn một ngày (Tùy chọn)</span>
                           )}
                           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
@@ -279,6 +282,7 @@ export function TournamentForm({ tournament, onSubmit, submitButtonText = "Creat
                         selected={field.value}
                         onSelect={field.onChange}
                         initialFocus
+                        locale={vi}
                       />
                     </PopoverContent>
                   </Popover>
@@ -291,7 +295,7 @@ export function TournamentForm({ tournament, onSubmit, submitButtonText = "Creat
               name="posterUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tournament Poster/Banner URL</FormLabel>
+                  <FormLabel>URL Áp phích/Banner Giải đấu</FormLabel>
                   <FormControl>
                     <Input placeholder="https://example.com/poster.jpg" {...field} data-ai-hint="tournament poster" />
                   </FormControl>
@@ -304,7 +308,7 @@ export function TournamentForm({ tournament, onSubmit, submitButtonText = "Creat
               name="websiteUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Official Website URL</FormLabel>
+                  <FormLabel>URL Trang web Chính thức</FormLabel>
                   <FormControl>
                     <Input placeholder="https://example.com/tournament" {...field} />
                   </FormControl>
@@ -317,7 +321,7 @@ export function TournamentForm({ tournament, onSubmit, submitButtonText = "Creat
               name="socialMediaUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Social Media Link</FormLabel>
+                  <FormLabel>Liên kết Mạng xã hội</FormLabel>
                   <FormControl>
                     <Input placeholder="https://facebook.com/tournament" {...field} />
                   </FormControl>
@@ -326,7 +330,7 @@ export function TournamentForm({ tournament, onSubmit, submitButtonText = "Creat
               )}
             />
             <Button type="submit" className="w-full sm:w-auto" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? "Saving..." : submitButtonText}
+              {form.formState.isSubmitting ? "Đang lưu..." : submitButtonText}
             </Button>
           </form>
         </Form>

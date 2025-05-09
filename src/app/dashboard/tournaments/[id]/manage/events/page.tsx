@@ -37,12 +37,12 @@ export default function TournamentEventsPage() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Tournament Not Found</CardTitle>
+          <CardTitle>Không tìm thấy Giải đấu</CardTitle>
         </CardHeader>
         <CardContent>
-          <p>The tournament details could not be loaded.</p>
+          <p>Không thể tải chi tiết giải đấu.</p>
           <Button asChild variant="link" className="mt-4">
-            <Link href="/dashboard"><ArrowLeft className="mr-2 h-4 w-4" /> Go back</Link>
+            <Link href="/dashboard"><ArrowLeft className="mr-2 h-4 w-4" /> Quay lại</Link>
           </Button>
         </CardContent>
       </Card>

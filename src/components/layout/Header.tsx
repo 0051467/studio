@@ -24,13 +24,13 @@ export function Header({ showSidebarTrigger = true }: HeaderProps) {
               href="/dashboard"
               className="transition-colors hover:text-foreground/80 text-foreground/60"
             >
-              Dashboard
+              Bảng điều khiển
             </Link>
             <Link
               href="/tournaments"
               className="transition-colors hover:text-foreground/80 text-foreground/60"
             >
-              Public View
+              Xem công khai
             </Link>
           </nav>
         </div>
